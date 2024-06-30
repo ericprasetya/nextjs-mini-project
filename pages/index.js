@@ -15,21 +15,27 @@ import {
 import { useRouter } from "next/router";
 import LayoutComponent from "@/layout";
 import DeleteConfirmationModal from "@/components/deleteConfirmationModal";
+import NoteFormModal from "@/components/noteFormModal";
 
 export default function Main({ notes }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setisDeleteModalOpen] = useState(false);
+  const [isFormModalOpen, setisFormModalOpen] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState(null); // Track the note to delete
+  const [noteToEdit, setNoteToEdit] = useState(null); // Track the note to delete
 
   const router = useRouter();
   console.log("notes => ", notes);
 
-  const handleModalOpen = () => {
-    setIsModalOpen(true);
+  const handleFormModalOpen = ($note) => {
+    setNoteToEdit($note)
+    setisFormModalOpen(true);
   };
 
   const handleModalClose = () => {
-    setIsModalOpen(false);
+    setisFormModalOpen(false);
+    setisDeleteModalOpen(false);
     setNoteToDelete(null); // Reset noteToDelete state
+    setNoteToEdit(null); // Reset noteToEdit state
   };
 
   const handleDelete = async () => {
@@ -50,8 +56,57 @@ export default function Main({ notes }) {
   };
 
   const handleDeleteNote = (id) => {
+    console.log("id => ", id);
     setNoteToDelete(id);
-    setIsModalOpen(true); // Open the confirmation modal
+    setisDeleteModalOpen(true); // Open the confirmation modal
+  };
+
+  const handleSaveNote = async (note) => {
+    if(note) {
+      try {
+        const response = await fetch(`/api/notes/update/${note.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            title: note.title,
+            description: note.description
+          })
+        });
+        const result = await response.json();
+        console.log("result => ", result);
+        if (result.success === true) {
+          router.reload();
+          setisFormModalOpen(false);
+          setNoteToEdit(null);
+        }
+
+      } catch (error) {
+        console.error("Error updating note:", error);
+      }
+    } else {
+      try {
+        const response = await fetch(`/api/notes`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            title: note.title,
+            description: note.description
+          })
+        });
+        const result = await response.json();
+        console.log("result => ", result);
+        if (result.success === true) {
+          router.reload();
+          setisFormModalOpen(false);
+        }
+      } catch (error) {
+        console.error("Error creating note:", error);
+      }
+    }
   };
 
   return (
@@ -59,7 +114,7 @@ export default function Main({ notes }) {
       <LayoutComponent metaTitle="Home">
         <Box padding={5}>
           <Flex justifyContent="end">
-            <Button colorScheme="blue" onClick={handleModalOpen}>
+            <Button colorScheme="blue" onClick={() => handleFormModalOpen(null)}>
               Add Note
             </Button>
           </Flex>
@@ -75,7 +130,10 @@ export default function Main({ notes }) {
                       <Text>{note.description}</Text>
                     </CardBody>
                     <CardFooter>
-                      <Button flex="1" variant="ghost">
+                      <Button 
+                      onClick={() => {handleFormModalOpen(note)}}
+                      flex="1" 
+                      variant="ghost">
                         Edit
                       </Button>
                       <Button
@@ -96,9 +154,19 @@ export default function Main({ notes }) {
 
       {/* Confirmation Modal */}
       <DeleteConfirmationModal
-        isOpen={isModalOpen}
+        isOpen={isDeleteModalOpen}
         onClose={handleModalClose}
         onDelete={handleDelete}
+      />
+
+      {/* Form Modal */}
+      <NoteFormModal
+        isOpen={isFormModalOpen}
+        onClose={() => {
+          handleModalClose();
+        }}
+        onSave={handleSaveNote}
+        noteToEdit={noteToEdit}
       />
     </>
   );

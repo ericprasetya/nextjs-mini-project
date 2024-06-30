@@ -7,9 +7,13 @@ export default async function handler(req, res) {
 
   if (req.method === "DELETE") {
     try {
-      // Replace with your actual delete logic
-      // For example, assuming `id` is used to delete from a database
-      const result = { success: true, message: `Deleted note with id ${id}` };
+      const response = await fetch(
+        `https://service.pace-unv.cloud/api/notes/delete/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+      const result = await response.json();
       res.status(200).json(result);
     } catch (error) {
       res.status(500).json({ success: false, error: "Failed to delete note" });
