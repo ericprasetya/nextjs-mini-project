@@ -30,7 +30,7 @@ export default function NoteFormModal({ isOpen, onClose, onSave, noteToEdit }) {
   }, [isOpen, initialTitle, initialDescription]);
 
   const handleSave = () => {
-    const updatedNote = { id: noteToEdit.id, title, description };
+    const updatedNote = { title, description };
     onSave(updatedNote);
   };
 

@@ -8,26 +8,32 @@ export default async function handler(req, res) {
       const notes = await response.json();
       res.status(200).json(notes);
     } catch (error) {
+      console.error("Error fetching notes:", error);
       res.status(500).json({ error: "Failed to fetch data" });
     }
   } else if (req.method === "POST") {
-    const { title, description } = req.body;
-
     try {
-      const createdNote = {
-        title,
-        description,
-      };
+      console.log("Request body:", req.body);
 
-      // Return a success response
-      res.status(201).json({ success: true, data: createdNote });
+      const response = await fetch("https://service.pace-unv.cloud/api/notes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(req.body), // Ensure the body is correctly stringified
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create note");
+      }
+
+      const result = await response.json();
+      res.status(201).json({ success: true, data: result });
     } catch (error) {
-      // Handle error
       console.error("Error creating note:", error);
       res.status(500).json({ success: false, error: "Failed to create note" });
     }
   } else {
-    // Handle other HTTP methods
     res.setHeader("Allow", ["GET", "POST"]);
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }

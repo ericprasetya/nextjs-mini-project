@@ -62,9 +62,9 @@ export default function Main({ notes }) {
   };
 
   const handleSaveNote = async (note) => {
-    if(note) {
+    if(noteToEdit) {
       try {
-        const response = await fetch(`/api/notes/update/${note.id}`, {
+        const response = await fetch(`/api/notes/update/${noteToEdit.id}`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json"
@@ -87,6 +87,7 @@ export default function Main({ notes }) {
       }
     } else {
       try {
+        console.log("note => ", note);
         const response = await fetch(`/api/notes`, {
           method: "POST",
           headers: {
